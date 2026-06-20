@@ -1,0 +1,20 @@
+{
+  "window_title_keyword": "抖音",
+  "window_class": "Chrome_WidgetWin_1",
+  "time_region": {
+    "left": 0,
+    "top": 0,
+    "right": 150,
+    "bottom": 40
+  },
+  "like_button": {
+    "x": 0,
+    "y": 0
+  },
+  "auto_like_threshold": 0.6,
+  "check_interval": 0.5,
+  "new_video_cooldown": 3.0,
+  "tesseract_cmd": "D:/Program Files/Tesseract-OCR/tesseract.exe",
+  "use_uiautomation": true
+  
+}
