@@ -166,8 +166,15 @@ class LikeEngine:
                 except Exception:
                     continue
                 all_controls.append(
-                    {"text": name_stripped, "top": top, "left": left, "depth": depth}
-                )
+    {
+        "text": name_stripped,
+        "top": top,
+        "left": left,
+        "width": rect.width(),
+        "height": rect.height(),
+        "depth": depth
+    }
+)
         except Exception:
             return []
         return all_controls
@@ -343,12 +350,11 @@ class LikeEngine:
         like_x, like_y = None, None
         for item in controls:
             if item["text"] == "听抖音":
-                listen_left = item["left"]
-                listen_top = item["top"]
-                offset_x = 40
-                offset_y = -340
-                like_x = listen_left + offset_x
-                like_y = listen_top + offset_y
+                listen_cx = item["left"] + item["width"] / 2
+                listen_cy = item["top"] + item["height"] / 2
+                scale_y = 15  
+                like_x = listen_cx
+                like_y = listen_cy - scale_y * item["height"]
                 break
 
         return f"@{author}", full_title if full_title else "无标题", (like_x, like_y)
@@ -361,6 +367,8 @@ class LikeEngine:
 
     def _capture_region(self, x, y, size=30):
         """x, y 是屏幕坐标，内部自动转成窗口坐标后截图"""
+        import os
+        import time
         if self.hwnd is None:
             return None
         cx, cy = self._screen_to_client(x, y)
@@ -370,7 +378,7 @@ class LikeEngine:
         right = left + size
         bottom = top + size
         try:
-            wDC = win32gui.GetWindowDC(self.hwnd)
+            wDC = win32gui.GetDC(self.hwnd)
             dcObj = win32ui.CreateDCFromHandle(wDC)
             cDC = dcObj.CreateCompatibleDC()
             dataBitMap = win32ui.CreateBitmap()
@@ -394,6 +402,17 @@ class LikeEngine:
             cDC.DeleteDC()
             win32gui.ReleaseDC(self.hwnd, wDC)
             win32gui.DeleteObject(dataBitMap.GetHandle())
+                        # 保存调试截图
+            try:
+                save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "debug_shots")
+                os.makedirs(save_dir, exist_ok=True)
+                ts = time.strftime("%H%M%S")
+                filepath = os.path.join(save_dir, f"like_debug_{ts}_{int(x)}_{int(y)}.png")
+                img.save(filepath)
+                self.log(f"[截图] 已保存 {os.path.basename(filepath)} "
+                         f"(窗口坐标 {cx},{cy}, 截图区域 {left},{top}~{right},{bottom})")
+            except Exception as e:
+                self.log(f"[截图保存失败] {e}")
             return img
         except Exception:
             return None
@@ -404,7 +423,7 @@ class LikeEngine:
         """
         if self.hwnd is None:
             return False
-        img = self._capture_region(screen_x, screen_y, size=30)
+        img = self._capture_region(screen_x,screen_y, size=30)
         if img is None:
             return False
         width, height = img.size
